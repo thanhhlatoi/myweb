@@ -9,4 +9,5 @@ export interface Gmail {
     year: number;
     status: string;
     owner: string;
+    note: string;
 }

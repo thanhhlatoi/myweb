@@ -64,7 +64,7 @@ export default function GmailDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
 
-      <DialogTrigger asChild>
+      <DialogTrigger>
 
         <Button>
           + Add Gmail
