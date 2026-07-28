@@ -1,13 +1,18 @@
 import { NavLink } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, PanelLeftClose } from "lucide-react";
 import { sidebarMenu } from "../../constants/sidebar";
 
-export default function Sidebar() {
+interface Props {
+  onClose: () => void;
+  onLogout: () => void;
+}
+
+export default function Sidebar({ onClose, onLogout }: Props) {
   return (
-    <aside className="flex h-screen w-64 flex-col bg-slate-900 text-white">
+    <aside className="sticky top-0 flex h-dvh w-64 shrink-0 flex-col bg-slate-900 text-white">
 
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-slate-700 p-6">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-700 p-6">
 
         {/* <Youtube size={32} className="text-red-500" /> */}
 
@@ -18,10 +23,19 @@ export default function Sidebar() {
           </p>
         </div>
 
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+          aria-label="Ẩn sidebar"
+        >
+          <PanelLeftClose size={20} />
+        </button>
+
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 px-3 py-5">
+      <nav className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-5">
 
         {sidebarMenu.map((item) => {
 
@@ -54,7 +68,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="border-t border-slate-700 p-4">
+      <div className="shrink-0 border-t border-slate-700 p-4">
 
         <div className="mb-4 flex items-center gap-3">
 
@@ -78,7 +92,11 @@ export default function Sidebar() {
 
         </div>
 
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-slate-300 transition hover:bg-red-500 hover:text-white">
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-slate-300 transition hover:bg-red-500 hover:text-white"
+        >
 
           <LogOut size={20} />
 
