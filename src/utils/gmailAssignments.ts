@@ -3,7 +3,7 @@ import type { Gmail } from "../types/gmail";
 export type AssignedGmail = Gmail & {
   assignedTo: string;
   assignedAt: string;
-  usageStatus: "assigned" | "in_use";
+  usageStatus: "assigned" | "in_use" | "issue" | "completed";
   source: "admin";
 };
 

@@ -110,13 +110,20 @@ export default function GmailPage() {
     setGmails(mergeGmails(gmailData, latestAssignedGmails));
   };
 
-  const acceptAssignedGmail = (gmailCode: string) => {
+  const updateAssignedGmailStatus = (gmailCode: string, usageStatus: "in_use" | "issue" | "completed") => {
     const assignedGmail = assignedGmails.find((gmail) => gmail.code === gmailCode);
     if (!assignedGmail) return;
 
-    const nextAssignedGmail = { ...assignedGmail, usageStatus: "in_use" as const };
+    const nextAssignedGmail = { ...assignedGmail, usageStatus };
     upsertAssignedGmail(nextAssignedGmail);
     refreshAssignedGmails();
+  };
+
+  const getUsageBadge = (usageStatus: string) => {
+    if (usageStatus === "in_use") return { label: "Đang dùng", className: "bg-emerald-100 text-emerald-700" };
+    if (usageStatus === "issue") return { label: "Báo lỗi", className: "bg-red-100 text-red-700" };
+    if (usageStatus === "completed") return { label: "Hoàn thành", className: "bg-violet-100 text-violet-700" };
+    return { label: "Đã giao", className: "bg-blue-100 text-blue-700" };
   };
 
   const openEdit = (gmail: Gmail) => {
@@ -173,11 +180,13 @@ export default function GmailPage() {
                   <p className="font-bold text-slate-950">{gmail.email}</p>
                   <p className="mt-1 text-sm text-slate-500">{gmail.code} | Giao ngày {gmail.assignedAt}</p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${gmail.usageStatus === "in_use" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>{gmail.usageStatus === "in_use" ? "Đang dùng" : "Đã giao"}</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getUsageBadge(gmail.usageStatus).className}`}>{getUsageBadge(gmail.usageStatus).label}</span>
               </div>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <button type="button" onClick={() => setViewingGmail(gmail)} className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Xem thông tin</button>
-                <button type="button" onClick={() => acceptAssignedGmail(gmail.code)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"><UserCheck size={16} /> Nhận làm</button>
+                <button type="button" onClick={() => updateAssignedGmailStatus(gmail.code, "in_use")} className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"><UserCheck size={16} /> Nhận làm</button>
+                <button type="button" onClick={() => updateAssignedGmailStatus(gmail.code, "issue")} className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100">Báo lỗi</button>
+                <button type="button" onClick={() => updateAssignedGmailStatus(gmail.code, "completed")} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">Hoàn thành</button>
               </div>
             </div>
           )) : <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500 md:col-span-2 xl:col-span-3">Chưa có Gmail nào admin chuyển cho tài khoản này.</div>}
