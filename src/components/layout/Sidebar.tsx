@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { LogOut, PanelLeftClose } from "lucide-react";
 import { sidebarMenu } from "../../constants/sidebar";
+import { getCurrentUserName } from "../../utils/notifications";
 
 interface Props {
   onClose: () => void;
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export default function Sidebar({ onClose, onLogout }: Props) {
+  const currentUserName = getCurrentUserName();
+
   return (
     <aside className="sticky top-0 flex h-dvh w-64 shrink-0 flex-col bg-slate-900 text-white">
 
@@ -26,7 +29,7 @@ export default function Sidebar({ onClose, onLogout }: Props) {
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white lg:hidden"
           aria-label="Ẩn sidebar"
         >
           <PanelLeftClose size={20} />
@@ -81,7 +84,7 @@ export default function Sidebar({ onClose, onLogout }: Props) {
           <div>
 
             <h3 className="font-semibold">
-              Thanh
+              {currentUserName}
             </h3>
 
             <p className="text-xs text-slate-400">

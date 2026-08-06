@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent } from "react";
 import { Activity, CalendarDays, Plus, RefreshCcw, Search, ShieldCheck, Smartphone, TrendingUp, Users, Wallet, X } from "lucide-react";
 import Pagination from "../../../../components/ui/Pagination";
 import { paginate } from "../../../../utils/pagination";
+import { getViOtpRentals } from "../../../../utils/viotpRentals";
 
 type ServiceStatus = "Active" | "Low stock" | "Paused";
 type Service = { id: string; name: string; provider: string; price: number; stock: number; successRate: number; status: ServiceStatus };
@@ -42,7 +43,7 @@ function formatCurrency(value: number) {
 
 export default function ViOtpProducts() {
   const [services, setServices] = useState(initialServices);
-  const [rentals] = useState(initialRentals);
+  const [rentals] = useState(() => [...getViOtpRentals().map((rental) => ({ ...rental, status: rental.status === "Waiting" ? "Timeout" : rental.status } as OtpRental)), ...initialRentals]);
   const [query, setQuery] = useState("");
   const [rentalQuery, setRentalQuery] = useState("");
   const [period, setPeriod] = useState<PeriodKey>("month");

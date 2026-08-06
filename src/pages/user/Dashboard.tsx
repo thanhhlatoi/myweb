@@ -10,37 +10,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const stats = [
-  {
-    label: "Gmail được cấp",
-    value: "128",
-    change: "+12 tuần này",
-    icon: Mail,
-    tone: "bg-blue-50 text-blue-600",
-  },
-  {
-    label: "Kênh YouTube",
-    value: "24",
-    change: "18 kênh active",
-    icon: PlaySquare,
-    tone: "bg-red-50 text-red-600",
-  },
-  {
-    label: "OTP hôm nay",
-    value: "47",
-    change: "92% thành công",
-    icon: ShieldCheck,
-    tone: "bg-emerald-50 text-emerald-600",
-  },
-  {
-    label: "Lương tạm tính",
-    value: "14.8M",
-    change: "Cập nhật 09:30",
-    icon: Wallet,
-    tone: "bg-violet-50 text-violet-600",
-  },
-];
+import { getAssignedGmailsForUser, getCurrentUserName } from "../../utils/gmailAssignments";
+import { getNotificationsForUser } from "../../utils/notifications";
+import { getSubmittedYoutubeChannelsByUser } from "../../utils/youtubeChannels";
+import { getViOtpRentalsForUser } from "../../utils/viotpRentals";
 
 const tasks = [
   {
@@ -99,6 +72,17 @@ const quickActions = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const currentUserName = getCurrentUserName();
+  const assignedGmails = getAssignedGmailsForUser(currentUserName);
+  const youtubeChannels = getSubmittedYoutubeChannelsByUser(currentUserName);
+  const otpRentals = getViOtpRentalsForUser(currentUserName);
+  const notifications = getNotificationsForUser(currentUserName);
+  const stats = [
+    { label: "Gmail được cấp", value: assignedGmails.length.toString(), change: `${assignedGmails.filter((item) => item.usageStatus === "completed").length} hoàn thành`, icon: Mail, tone: "bg-blue-50 text-blue-600" },
+    { label: "Kênh YouTube", value: youtubeChannels.length.toString(), change: `${youtubeChannels.filter((item) => item.monetization === "Enabled").length} kênh kiếm tiền`, icon: PlaySquare, tone: "bg-red-50 text-red-600" },
+    { label: "OTP hôm nay", value: otpRentals.length.toString(), change: `${otpRentals.filter((item) => item.status === "Success").length} thành công`, icon: ShieldCheck, tone: "bg-emerald-50 text-emerald-600" },
+    { label: "Thông báo mới", value: notifications.filter((item) => item.unread).length.toString(), change: `${notifications.length} tổng thông báo`, icon: Wallet, tone: "bg-violet-50 text-violet-600" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -113,7 +97,7 @@ export default function Dashboard() {
                 User Dashboard
               </p>
               <h1 className="mt-3 text-3xl font-bold md:text-5xl">
-                Xin chào Thanh, hôm nay có nhiều việc cần xử lý.
+                Xin chào {currentUserName}, hôm nay có nhiều việc cần xử lý.
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
                 Theo dõi nhanh Gmail, kênh YouTube, OTP, lương và các thông báo quan trọng trong cùng một màn hình.

@@ -26,7 +26,7 @@ import { paginate } from "../../../../utils/pagination";
 type TabKey = "overview" | "warehouse" | "assignments" | "checker" | "issues" | "imports";
 type GmailStatus = "Live" | "Need recovery" | "Locked" | "Sold";
 type ImportStatus = "Đang import" | "Hoàn tất" | "Có lỗi";
-type UsageStatus = "unused" | "assigned" | "in_use";
+type UsageStatus = "unused" | "assigned" | "in_use" | "issue" | "completed";
 
 type GmailPackage = {
   id: string;
@@ -807,6 +807,8 @@ function GmailToolbar({
             <option value="unused">Chưa giao</option>
             <option value="assigned">Đã giao</option>
             <option value="in_use">Đang dùng</option>
+            <option value="issue">Báo lỗi</option>
+            <option value="completed">Hoàn thành</option>
           </select>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -883,6 +885,8 @@ function AssignmentToolbar({ query, employeeFilter, usageFilter, onQueryChange, 
           <option value="unused">Chưa giao</option>
           <option value="assigned">Đã giao</option>
           <option value="in_use">Đang dùng</option>
+          <option value="issue">Báo lỗi</option>
+          <option value="completed">Hoàn thành</option>
         </select>
       </div>
     </section>
@@ -981,6 +985,8 @@ function EmailTable({ title, rows, onCheck, onAssign, onUsageChange, selectedCod
                     <option value="unused">Chưa giao</option>
                     <option value="assigned">Đã giao</option>
                     <option value="in_use">Đang dùng</option>
+                    <option value="issue">Báo lỗi</option>
+                    <option value="completed">Hoàn thành</option>
                   </select>
                 </td>
                 <td className="px-4 py-4 text-slate-600">{item.lastCheck}</td>

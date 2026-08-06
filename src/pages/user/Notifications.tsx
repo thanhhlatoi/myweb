@@ -10,6 +10,8 @@ import {
 import { useState } from "react";
 import { getCurrentUserName, getNotificationsForUser, markUserNotificationsRead } from "../../utils/notifications";
 import type { AppNotification } from "../../utils/notifications";
+import Pagination from "../../components/ui/Pagination";
+import { paginate } from "../../utils/pagination";
 
 const defaultNotifications: AppNotification[] = [
   {
@@ -93,10 +95,14 @@ export default function NotificationsPage() {
   const currentUserName = getCurrentUserName();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("Tất cả");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [hiddenIds, setHiddenIds] = useState<string[]>(() => JSON.parse(localStorage.getItem("hidden_notifications") ?? "[]") as string[]);
   const [adminNotifications, setAdminNotifications] = useState(() => getNotificationsForUser(currentUserName));
   const [selectedNotification, setSelectedNotification] = useState<AppNotification>(() => adminNotifications[0] ?? defaultNotifications[0]);
   const notifications = [...adminNotifications, ...defaultNotifications];
   const filteredNotifications = notifications.filter((item) => {
+    if (hiddenIds.includes(item.id)) return false;
     const matchesSearch = [item.title, item.message, item.sender, item.type, item.targetUser ?? ""].join(" ").toLowerCase().includes(search.toLowerCase());
     const matchesFilter = activeFilter === "Tất cả" || (activeFilter === "Chưa đọc" ? item.unread : item.type === activeFilter);
 
@@ -105,6 +111,13 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((item) => item.unread).length;
   const policyCount = notifications.filter((item) => item.type === "Chính sách YouTube").length;
   const adminCount = notifications.filter((item) => item.type === "Admin").length;
+  const paginatedNotifications = paginate(filteredNotifications, page, pageSize);
+
+  const hideNotification = (id: string) => {
+    const nextHiddenIds = [...hiddenIds, id];
+    setHiddenIds(nextHiddenIds);
+    localStorage.setItem("hidden_notifications", JSON.stringify(nextHiddenIds));
+  };
 
   const handleMarkAllRead = () => {
     markUserNotificationsRead(currentUserName);
@@ -158,7 +171,7 @@ export default function NotificationsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => { setSearch(event.target.value); setPage(1); }}
               placeholder="Tìm thông báo, người gửi hoặc chính sách..."
               className="w-full rounded-xl border bg-slate-50 py-3 pl-10 pr-4 outline-none transition focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
             />
@@ -168,7 +181,7 @@ export default function NotificationsPage() {
             {filters.map((filter, index) => (
               <button
                 key={filter}
-                onClick={() => setActiveFilter(filter)}
+                onClick={() => { setActiveFilter(filter); setPage(1); }}
                 className={`shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition ${
                   activeFilter === filter || (index === 0 && activeFilter === "Tất cả")
                     ? "bg-slate-950 text-white"
@@ -184,7 +197,7 @@ export default function NotificationsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <div className="space-y-4">
-          {filteredNotifications.map((item) => (
+          {paginatedNotifications.map((item) => (
             <button
               key={item.id}
               onClick={() => setSelectedNotification(item)}
@@ -226,6 +239,7 @@ export default function NotificationsPage() {
                         {item.priority}
                       </span>
                     </div>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); hideNotification(item.id); }} className="mt-3 text-xs font-semibold text-slate-400 hover:text-red-600">Ẩn thông báo</button>
                   </div>
                 </div>
 
@@ -236,6 +250,7 @@ export default function NotificationsPage() {
               </div>
             </button>
           ))}
+          <Pagination page={page} pageSize={pageSize} total={filteredNotifications.length} onPageChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
         </div>
 
         <div className="h-fit rounded-2xl border bg-white p-5 shadow-sm xl:sticky xl:top-20">

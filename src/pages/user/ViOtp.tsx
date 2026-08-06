@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Copy, KeyRound, Phone, RefreshCw, Search, ShieldCheck } from "lucide-react";
+import { getCurrentUserName } from "../../utils/notifications";
+import { getCurrentPeriod, getViOtpRentalsForUser, upsertViOtpRental } from "../../utils/viotpRentals";
 
 type OtpOrder = { id: string; service: string; phone: string; price: number; code: string; timeLeft: string; status: "Đã nhận OTP" | "Đang chờ" | "Hết hạn" };
 
@@ -52,7 +54,17 @@ function formatCurrency(value: number) {
 }
 
 export default function ViOtpPage() {
-  const [otpOrders, setOtpOrders] = useState(initialOtpOrders);
+  const currentUserName = getCurrentUserName();
+  const savedRentals = getViOtpRentalsForUser(currentUserName).map((rental) => ({
+    id: rental.id,
+    service: rental.service,
+    phone: rental.phone,
+    price: rental.price,
+    code: rental.code,
+    timeLeft: rental.status === "Waiting" ? "05:00" : "03:12",
+    status: rental.status === "Success" ? "Đã nhận OTP" : rental.status === "Waiting" ? "Đang chờ" : "Hết hạn",
+  } satisfies OtpOrder));
+  const [otpOrders, setOtpOrders] = useState(() => [...savedRentals, ...initialOtpOrders]);
   const [service, setService] = useState("YouTube");
   const [carrier, setCarrier] = useState("Tất cả nhà mạng");
   const [search, setSearch] = useState("");
@@ -71,13 +83,31 @@ export default function ViOtpPage() {
       timeLeft: "05:00",
       status: "Đang chờ",
     };
+    const period = getCurrentPeriod();
 
     setOtpOrders((current) => [nextOrder, ...current]);
+    upsertViOtpRental({
+      id: nextOrder.id,
+      user: currentUserName,
+      service: nextOrder.service,
+      phone: nextOrder.phone,
+      price: nextOrder.price,
+      code: nextOrder.code,
+      status: "Waiting",
+      rentedAt: new Date().toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" }),
+      ...period,
+    });
     setMessage(`Đã thuê số ${nextOrder.phone} cho ${service}${carrier !== "Tất cả nhà mạng" ? ` (${carrier})` : ""}.`);
   };
 
   const refreshOrder = (id: string) => {
-    setOtpOrders((current) => current.map((order) => order.id === id && order.status === "Đang chờ" ? { ...order, code: String(Math.floor(100000 + Math.random() * 899999)), status: "Đã nhận OTP", timeLeft: "03:12" } : order));
+    setOtpOrders((current) => current.map((order) => {
+      if (order.id !== id || order.status !== "Đang chờ") return order;
+      const nextOrder = { ...order, code: String(Math.floor(100000 + Math.random() * 899999)), status: "Đã nhận OTP" as const, timeLeft: "03:12" };
+      const period = getCurrentPeriod();
+      upsertViOtpRental({ id: nextOrder.id, user: currentUserName, service: nextOrder.service, phone: nextOrder.phone, price: nextOrder.price, code: nextOrder.code, status: "Success", rentedAt: new Date().toLocaleString("vi-VN"), ...period });
+      return nextOrder;
+    }));
     setMessage(`Đã cập nhật trạng thái ${id}.`);
   };
 
