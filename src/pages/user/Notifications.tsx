@@ -7,8 +7,11 @@ import {
   Search,
   ShieldAlert,
 } from "lucide-react";
+import { useState } from "react";
+import { getCurrentUserName, getNotificationsForUser, markUserNotificationsRead } from "../../utils/notifications";
+import type { AppNotification } from "../../utils/notifications";
 
-const notifications = [
+const defaultNotifications: AppNotification[] = [
   {
     id: "NTF-001",
     title: "Admin cập nhật quy trình kiểm tra kênh",
@@ -19,6 +22,7 @@ const notifications = [
     type: "Admin",
     priority: "Quan trọng",
     unread: true,
+    audience: "all",
   },
   {
     id: "NTF-002",
@@ -30,6 +34,7 @@ const notifications = [
     type: "Chính sách YouTube",
     priority: "Cảnh báo",
     unread: true,
+    audience: "all",
   },
   {
     id: "NTF-003",
@@ -41,6 +46,7 @@ const notifications = [
     type: "Hệ thống",
     priority: "Bình thường",
     unread: false,
+    audience: "all",
   },
   {
     id: "NTF-004",
@@ -52,6 +58,7 @@ const notifications = [
     type: "Cảnh báo kênh",
     priority: "Quan trọng",
     unread: false,
+    audience: "all",
   },
   {
     id: "NTF-005",
@@ -63,6 +70,7 @@ const notifications = [
     type: "Chính sách YouTube",
     priority: "Cảnh báo",
     unread: false,
+    audience: "all",
   },
 ];
 
@@ -82,10 +90,26 @@ function getPriorityClass(priority: string) {
 }
 
 export default function NotificationsPage() {
+  const currentUserName = getCurrentUserName();
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState("Tất cả");
+  const [adminNotifications, setAdminNotifications] = useState(() => getNotificationsForUser(currentUserName));
+  const [selectedNotification, setSelectedNotification] = useState<AppNotification>(() => adminNotifications[0] ?? defaultNotifications[0]);
+  const notifications = [...adminNotifications, ...defaultNotifications];
+  const filteredNotifications = notifications.filter((item) => {
+    const matchesSearch = [item.title, item.message, item.sender, item.type, item.targetUser ?? ""].join(" ").toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = activeFilter === "Tất cả" || (activeFilter === "Chưa đọc" ? item.unread : item.type === activeFilter);
+
+    return matchesSearch && matchesFilter;
+  });
   const unreadCount = notifications.filter((item) => item.unread).length;
   const policyCount = notifications.filter((item) => item.type === "Chính sách YouTube").length;
   const adminCount = notifications.filter((item) => item.type === "Admin").length;
-  const selectedNotification = notifications[0];
+
+  const handleMarkAllRead = () => {
+    markUserNotificationsRead(currentUserName);
+    setAdminNotifications(getNotificationsForUser(currentUserName));
+  };
 
   return (
     <div className="space-y-6">
@@ -98,11 +122,11 @@ export default function NotificationsPage() {
             <h1 className="mt-3 text-3xl font-bold md:text-4xl">Thông báo</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
               Nhận thông tin mới nhất từ admin, cảnh báo hệ thống và các cập
-              nhật chính sách quan trọng của YouTube.
+              nhật chính sách quan trọng của YouTube. Đang xem dưới tài khoản {currentUserName}.
             </p>
           </div>
 
-          <button className="inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 shadow transition hover:bg-red-50">
+          <button onClick={handleMarkAllRead} className="inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 shadow transition hover:bg-red-50">
             <CheckCheck size={18} />
             Đánh dấu đã đọc
           </button>
@@ -133,6 +157,8 @@ export default function NotificationsPage() {
           <div className="relative w-full xl:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Tìm thông báo, người gửi hoặc chính sách..."
               className="w-full rounded-xl border bg-slate-50 py-3 pl-10 pr-4 outline-none transition focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
             />
@@ -142,8 +168,9 @@ export default function NotificationsPage() {
             {filters.map((filter, index) => (
               <button
                 key={filter}
+                onClick={() => setActiveFilter(filter)}
                 className={`shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                  index === 0
+                  activeFilter === filter || (index === 0 && activeFilter === "Tất cả")
                     ? "bg-slate-950 text-white"
                     : "border bg-white text-slate-700 hover:bg-slate-50"
                 }`}
@@ -157,9 +184,10 @@ export default function NotificationsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <div className="space-y-4">
-          {notifications.map((item) => (
+          {filteredNotifications.map((item) => (
             <button
               key={item.id}
+              onClick={() => setSelectedNotification(item)}
               className={`w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
                 item.unread ? "border-red-200 ring-4 ring-red-50" : ""
               }`}
@@ -235,6 +263,10 @@ export default function NotificationsPage() {
             <div className="flex justify-between gap-3">
               <span className="text-slate-500">Phân loại</span>
               <span className="font-semibold text-slate-950">{selectedNotification.type}</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-slate-500">Người nhận</span>
+              <span className="font-semibold text-slate-950">{selectedNotification.audience === "all" ? "Tất cả user" : selectedNotification.targetUser}</span>
             </div>
           </div>
 

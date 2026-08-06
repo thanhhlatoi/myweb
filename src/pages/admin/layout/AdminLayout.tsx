@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PlaySquare,
   Search,
   Settings,
   ShieldCheck,
@@ -19,7 +20,9 @@ const adminMenu = [
   { title: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Người dùng", path: "/admin/users", icon: Users },
   { title: "Sản phẩm", path: "/admin/products", icon: Boxes },
+  { title: "Kênh YouTube", path: "/admin/youtube", icon: PlaySquare },
   { title: "Doanh thu", path: "/admin/revenue", icon: ChartNoAxesCombined },
+  { title: "Thông báo", path: "/admin/notifications", icon: Bell },
   { title: "Cài đặt", path: "/admin/settings", icon: Settings },
 ];
 
@@ -30,12 +33,14 @@ const pageTitles: Record<string, string> = {
   "/admin/products/adsense": "Nick GG Adsense",
   "/admin/products/viotp": "Dịch vụ ViOTP",
   "/admin/products/gmail": "Kho Gmail",
+  "/admin/youtube": "Check kênh YouTube",
   "/admin/revenue": "Doanh thu nhân sự",
+  "/admin/notifications": "Gửi thông báo",
   "/admin/settings": "Cài đặt hệ thống",
 };
 
 export default function AdminLayout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -49,31 +54,43 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe_0,#f8fafc_34%,#f1f5f9_100%)] lg:flex">
       {isSidebarOpen && (
-        <aside className="sticky top-0 flex h-dvh w-72 shrink-0 flex-col bg-slate-950 text-white">
-          <div className="flex items-center justify-between gap-3 border-b border-white/10 p-6">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-blue-600 p-2">
-                  <ShieldCheck size={22} />
-                </div>
-                <h1 className="text-xl font-bold">Admin Panel</h1>
-              </div>
-              <p className="mt-2 text-xs text-slate-400">System Management</p>
-            </div>
+        <button
+          type="button"
+          aria-label="Đóng admin sidebar"
+          className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-            <button
-              type="button"
-              onClick={() => setIsSidebarOpen(false)}
-              className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
-              aria-label="Ẩn admin sidebar"
-            >
-              <X size={20} />
-            </button>
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 shrink-0 flex-col bg-slate-950 text-white shadow-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 p-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="rounded-xl bg-blue-600 p-2">
+                <ShieldCheck size={22} />
+              </div>
+              <h1 className="text-xl font-bold">Admin Panel</h1>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">System Management</p>
           </div>
 
-          <nav className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-5">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(false)}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
+            aria-label="Ẩn admin sidebar"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-5">
             {adminMenu.map((item) => {
               const Icon = item.icon;
 
@@ -95,9 +112,9 @@ export default function AdminLayout() {
                 </NavLink>
               );
             })}
-          </nav>
+        </nav>
 
-          <div className="shrink-0 border-t border-white/10 p-4">
+        <div className="shrink-0 border-t border-white/10 p-4">
             <div className="mb-4 rounded-2xl bg-white/10 p-4">
               <p className="text-sm text-slate-300">Trạng thái hệ thống</p>
               <div className="mt-3 flex items-center gap-2 text-emerald-300">
@@ -114,17 +131,16 @@ export default function AdminLayout() {
               <LogOut size={20} />
               Logout
             </button>
-          </div>
-        </aside>
-      )}
+        </div>
+      </aside>
 
       <div className="min-h-screen min-w-0 flex-1">
-        <header className="sticky top-0 z-40 border-b bg-white/95 px-4 py-3 shadow-sm backdrop-blur lg:px-8">
+        <header className="sticky top-0 z-30 border-b border-white/70 bg-white/85 px-4 py-3 shadow-sm backdrop-blur-xl lg:px-8">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => setIsSidebarOpen((value) => !value)}
+                onClick={() => setIsSidebarOpen(true)}
                 className="rounded-xl border p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
                 aria-label="Bật tắt admin sidebar"
               >
@@ -194,7 +210,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="p-6 lg:p-8">
+        <main className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

@@ -1,4 +1,15 @@
-import { AlertTriangle, ArrowUpRight, Boxes, CheckCircle2, Clock3, DollarSign, Server, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  Boxes,
+  CheckCircle2,
+  Clock3,
+  DollarSign,
+  MailCheck,
+  Server,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 
 const stats = [
   { label: "Tổng user", value: "1,284", change: "+36 hôm nay", icon: Users, tone: "bg-blue-50 text-blue-600" },
@@ -24,6 +35,19 @@ const operations = [
   { title: "Duyệt 12 tài khoản nhân sự mới", status: "Chờ duyệt", color: "bg-amber-100 text-amber-700" },
   { title: "Cập nhật bảng giá thuê OTP", status: "Đang xử lý", color: "bg-blue-100 text-blue-700" },
   { title: "Kiểm tra quyền truy cập admin", status: "Hoàn tất", color: "bg-emerald-100 text-emerald-700" },
+];
+
+const activityLogs = [
+  { user: "Minh Tran", action: "đã import 300 Gmail US Trust", time: "08:45" },
+  { user: "Lan Pham", action: "đã khóa 2 tài khoản checkpoint", time: "09:12" },
+  { user: "Huy Le", action: "đã đồng bộ số ViOTP", time: "09:40" },
+  { user: "Admin Thanh", action: "đã xuất báo cáo doanh thu", time: "10:05" },
+];
+
+const channelRevenue = [
+  { name: "Adsense", value: "126M", percent: 56, color: "bg-amber-500" },
+  { name: "Gmail", value: "84.2M", percent: 32, color: "bg-blue-500" },
+  { name: "ViOTP", value: "18.4M", percent: 12, color: "bg-emerald-500" },
 ];
 
 export default function AdminDashboard() {
@@ -67,7 +91,7 @@ export default function AdminDashboard() {
         })}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
           <h2 className="text-lg font-bold text-slate-950">Sức khỏe dịch vụ</h2>
           <p className="mt-1 text-sm text-slate-500">Tình trạng hoạt động của các module chính.</p>
@@ -97,6 +121,51 @@ export default function AdminDashboard() {
                   </div>
                   <p className="mt-1 text-sm text-slate-500">{alert.message}</p>
                   <p className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-400"><Clock3 size={13} /> {alert.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-2xl border bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-950">Doanh thu theo kênh</h2>
+          <p className="mt-1 text-sm text-slate-500">Tỉ trọng doanh thu tháng hiện tại.</p>
+          <div className="mt-6 space-y-5">
+            {channelRevenue.map((item) => (
+              <div key={item.name}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-600">{item.name}</span>
+                  <span className="font-bold text-slate-950">{item.value}</span>
+                </div>
+                <div className="mt-2 h-3 rounded-full bg-slate-100">
+                  <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${item.percent}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-950">Hoạt động gần đây</h2>
+              <p className="mt-1 text-sm text-slate-500">Log thao tác chính trong buổi sáng.</p>
+            </div>
+            <ShieldCheck className="text-blue-600" size={22} />
+          </div>
+          <div className="mt-5 space-y-3">
+            {activityLogs.map((log) => (
+              <div key={`${log.user}-${log.time}`} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
+                <div className="rounded-xl bg-white p-2 text-blue-600 shadow-sm">
+                  <MailCheck size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-slate-600">
+                    <span className="font-bold text-slate-950">{log.user}</span> {log.action}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-400">{log.time} hôm nay</p>
                 </div>
               </div>
             ))}

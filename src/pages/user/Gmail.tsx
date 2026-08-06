@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { AlertTriangle, Copy, Mail, ShieldCheck, Users } from "lucide-react";
+import { AlertTriangle, Copy, Mail, RefreshCcw, ShieldCheck, UserCheck, Users } from "lucide-react";
 import GmailToolbar from "../../components/gmail/GmailToolbar";
 import GmailTable from "../../components/gmail/GmailTable";
 import { gmailData } from "../../data/gmailData";
 import type { Gmail } from "../../types/gmail";
+import { getAssignedGmailsForUser, getCurrentUserName, upsertAssignedGmail } from "../../utils/gmailAssignments";
 import {
   Dialog,
   DialogContent,
@@ -70,8 +71,16 @@ function exportCsv(data: Gmail[]) {
   URL.revokeObjectURL(url);
 }
 
+function mergeGmails(defaultGmails: Gmail[], assignedGmails: Gmail[]) {
+  const assignedCodes = new Set(assignedGmails.map((gmail) => gmail.code));
+
+  return [...assignedGmails, ...defaultGmails.filter((gmail) => !assignedCodes.has(gmail.code))];
+}
+
 export default function GmailPage() {
-  const [gmails, setGmails] = useState<Gmail[]>(gmailData);
+  const currentUserName = getCurrentUserName();
+  const [assignedGmails, setAssignedGmails] = useState(() => getAssignedGmailsForUser(currentUserName));
+  const [gmails, setGmails] = useState<Gmail[]>(() => mergeGmails(gmailData, assignedGmails));
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("Tất cả trạng thái");
   const [viewingGmail, setViewingGmail] = useState<Gmail | null>(null);
@@ -93,6 +102,22 @@ export default function GmailPage() {
   const activeCount = gmails.filter((gmail) => gmail.status === "Active").length;
   const warningCount = gmails.filter((gmail) => gmail.status !== "Active").length;
   const countries = new Set(gmails.map((gmail) => gmail.country)).size;
+  const transferredCount = assignedGmails.length;
+
+  const refreshAssignedGmails = () => {
+    const latestAssignedGmails = getAssignedGmailsForUser(currentUserName);
+    setAssignedGmails(latestAssignedGmails);
+    setGmails(mergeGmails(gmailData, latestAssignedGmails));
+  };
+
+  const acceptAssignedGmail = (gmailCode: string) => {
+    const assignedGmail = assignedGmails.find((gmail) => gmail.code === gmailCode);
+    if (!assignedGmail) return;
+
+    const nextAssignedGmail = { ...assignedGmail, usageStatus: "in_use" as const };
+    upsertAssignedGmail(nextAssignedGmail);
+    refreshAssignedGmails();
+  };
 
   const openEdit = (gmail: Gmail) => {
     setEditingGmail(gmail);
@@ -118,7 +143,7 @@ export default function GmailPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.28em] text-red-200">Gmail Workspace</p>
             <h1 className="mt-3 text-3xl font-bold md:text-4xl">Quản lý Gmail của bạn</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
-              Xem thông tin Gmail được cấp, copy nhanh dữ liệu quan trọng và xử lý các tài khoản cần cập nhật.
+              Xem Gmail admin chuyển cho bạn, copy nhanh dữ liệu quan trọng và cập nhật trạng thái sử dụng.
             </p>
           </div>
 
@@ -129,6 +154,36 @@ export default function GmailPage() {
         </div>
       </div>
 
+      <section className="rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-950">Mail admin chuyển cho {currentUserName}</h2>
+            <p className="mt-1 text-sm text-slate-500">Khi admin giao Gmail trong kho, mail sẽ xuất hiện tại đây sau khi bấm làm mới.</p>
+          </div>
+          <button type="button" onClick={refreshAssignedGmails} className="inline-flex w-fit items-center gap-2 rounded-xl border px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50">
+            <RefreshCcw size={18} />
+            Làm mới mail được giao
+          </button>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {assignedGmails.length > 0 ? assignedGmails.map((gmail) => (
+            <div key={gmail.code} className="rounded-2xl bg-slate-50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-950">{gmail.email}</p>
+                  <p className="mt-1 text-sm text-slate-500">{gmail.code} | Giao ngày {gmail.assignedAt}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${gmail.usageStatus === "in_use" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>{gmail.usageStatus === "in_use" ? "Đang dùng" : "Đã giao"}</span>
+              </div>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <button type="button" onClick={() => setViewingGmail(gmail)} className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Xem thông tin</button>
+                <button type="button" onClick={() => acceptAssignedGmail(gmail.code)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"><UserCheck size={16} /> Nhận làm</button>
+              </div>
+            </div>
+          )) : <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500 md:col-span-2 xl:col-span-3">Chưa có Gmail nào admin chuyển cho tài khoản này.</div>}
+        </div>
+      </section>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
@@ -136,6 +191,13 @@ export default function GmailPage() {
             <Mail className="text-blue-600" size={20} />
           </div>
           <strong className="mt-3 block text-2xl text-slate-950">{gmails.length}</strong>
+        </div>
+        <div className="rounded-2xl border bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-500">Admin chuyển</p>
+            <UserCheck className="text-blue-600" size={20} />
+          </div>
+          <strong className="mt-3 block text-2xl text-blue-600">{transferredCount}</strong>
         </div>
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">

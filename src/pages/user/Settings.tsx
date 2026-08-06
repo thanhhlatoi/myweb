@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
+import { useState } from "react";
+import { getCurrentUserName } from "../../utils/notifications";
 
 const loginHistory = [
   {
@@ -32,6 +34,20 @@ const loginHistory = [
 ];
 
 export default function SettingsPage() {
+  const currentUserName = getCurrentUserName();
+  const [message, setMessage] = useState("");
+  const [displayName, setDisplayName] = useState(currentUserName.split(" ")[0] ?? currentUserName);
+  const [fullName, setFullName] = useState(currentUserName);
+  const [phone, setPhone] = useState("0987 654 321");
+  const [region, setRegion] = useState("Ha Noi");
+
+  const saveProfile = () => {
+    const rawUser = localStorage.getItem("user");
+    const user = rawUser ? JSON.parse(rawUser) as { email?: string; role?: string } : {};
+    localStorage.setItem("user", JSON.stringify({ ...user, name: fullName, displayName, phone, region }));
+    setMessage("Đã lưu thông tin người dùng.");
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-700 p-6 text-white shadow-lg">
@@ -49,12 +65,14 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <button className="inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 shadow transition hover:bg-indigo-50">
+          <button onClick={saveProfile} className="inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 shadow transition hover:bg-indigo-50">
             <Save size={18} />
             Lưu thay đổi
           </button>
         </div>
       </div>
+
+      {message && <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm font-semibold text-indigo-700">{message}</div>}
 
       <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
         <div className="space-y-6">
@@ -70,7 +88,7 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            <h2 className="mt-4 text-xl font-bold text-slate-950">Thanh Nguyen</h2>
+            <h2 className="mt-4 text-xl font-bold text-slate-950">{fullName}</h2>
             <p className="text-sm text-slate-500">Employee</p>
 
             <div className="mt-5 rounded-2xl bg-emerald-50 p-4 text-left">
@@ -118,7 +136,8 @@ export default function SettingsPage() {
               <div>
                 <label className="text-sm font-semibold text-slate-600">Họ và tên</label>
                 <input
-                  defaultValue="Thanh Nguyen"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
                   className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                 />
               </div>
@@ -126,7 +145,8 @@ export default function SettingsPage() {
               <div>
                 <label className="text-sm font-semibold text-slate-600">Tên hiển thị</label>
                 <input
-                  defaultValue="Thanh"
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
                   className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                 />
               </div>
@@ -145,7 +165,8 @@ export default function SettingsPage() {
               <div>
                 <label className="text-sm font-semibold text-slate-600">Số điện thoại</label>
                 <input
-                  defaultValue="0987 654 321"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
                   className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                 />
               </div>
@@ -161,7 +182,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="text-sm font-semibold text-slate-600">Khu vực</label>
-                <select className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-100">
+                <select value={region} onChange={(event) => setRegion(event.target.value)} className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-100">
                   <option>Ha Noi</option>
                   <option>Ho Chi Minh</option>
                   <option>Da Nang</option>
@@ -193,7 +214,7 @@ export default function SettingsPage() {
                   placeholder="Nhập lại mật khẩu mới"
                   className="w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                 />
-                <button className="w-full rounded-xl bg-slate-950 px-4 py-3 font-semibold text-white transition hover:bg-slate-800">
+                <button onClick={() => setMessage("Đã gửi yêu cầu cập nhật mật khẩu demo.")} className="w-full rounded-xl bg-slate-950 px-4 py-3 font-semibold text-white transition hover:bg-slate-800">
                   Cập nhật mật khẩu
                 </button>
               </div>

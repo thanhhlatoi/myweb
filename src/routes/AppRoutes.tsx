@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 
 import Login from "../pages/auth/Login";
 import UserLayout from "../layouts/UserLayout";
@@ -16,6 +16,8 @@ import UserManagement from "../pages/admin/users/UserManagement";
 import ProductManagement from "../pages/admin/products/ProductManagement";
 import AdminSettings from "../pages/admin/settings/Settings";
 import UserRevenue from "../pages/admin/revenue/UserRevenue";
+import AdminNotifications from "../pages/admin/notifications/AdminNotifications";
+import AdminYoutubeChannels from "../pages/admin/youtube/AdminYoutubeChannels";
 import AdsenseProducts from "../pages/admin/products/adsense/AdsenseProducts";
 import ViOtpProducts from "../pages/admin/products/viotp/ViOtpProducts";
 import GmailProducts from "../pages/admin/products/gmail/GmailProducts";
@@ -24,6 +26,8 @@ export default function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
+
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
                 <Route path="/login" element={<Login />} />
 
@@ -46,8 +50,12 @@ export default function AppRoutes() {
                     <Route path="/admin/products/viotp" element={<ViOtpProducts />} />
                     <Route path="/admin/products/gmail" element={<GmailProducts />} />
                     <Route path="/admin/revenue" element={<UserRevenue />} />
+                    <Route path="/admin/youtube" element={<AdminYoutubeChannels />} />
+                    <Route path="/admin/notifications" element={<AdminNotifications />} />
                     <Route path="/admin/settings" element={<AdminSettings />} />
                 </Route>
+
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
             </Routes>
         </BrowserRouter>

@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Wallet,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const stats = [
   {
@@ -89,9 +90,16 @@ const progressItems = [
   { label: "OTP thành công", value: 92, color: "bg-emerald-600" },
 ];
 
-const quickActions = ["Copy Gmail", "Thuê OTP", "Xem lương", "Nguồn YTB"];
+const quickActions = [
+  { label: "Copy Gmail", path: "/gmail" },
+  { label: "Thuê OTP", path: "/viotp" },
+  { label: "Xem lương", path: "/salary" },
+  { label: "Nguồn YTB", path: "/youtube-sources" },
+];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-3xl bg-slate-950 text-white shadow-lg">
@@ -201,8 +209,8 @@ export default function Dashboard() {
           <h2 className="text-lg font-bold text-slate-950">Thao tác nhanh</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {quickActions.map((action) => (
-              <button key={action} className="rounded-2xl border bg-slate-50 px-4 py-4 text-left font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-                {action}
+              <button key={action.label} onClick={() => navigate(action.path)} className="rounded-2xl border bg-slate-50 px-4 py-4 text-left font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
+                {action.label}
               </button>
             ))}
           </div>

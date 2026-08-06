@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Copy, KeyRound, Phone, RefreshCw, Search, ShieldCheck } from "lucide-react";
 
-const otpOrders = [
+type OtpOrder = { id: string; service: string; phone: string; price: number; code: string; timeLeft: string; status: "Đã nhận OTP" | "Đang chờ" | "Hết hạn" };
+
+const initialOtpOrders: OtpOrder[] = [
   {
     id: "OTP-1001",
     service: "YouTube",
@@ -49,8 +52,39 @@ function formatCurrency(value: number) {
 }
 
 export default function ViOtpPage() {
+  const [otpOrders, setOtpOrders] = useState(initialOtpOrders);
+  const [service, setService] = useState("YouTube");
+  const [carrier, setCarrier] = useState("Tất cả nhà mạng");
+  const [search, setSearch] = useState("");
+  const [message, setMessage] = useState("");
+  const filteredOrders = otpOrders.filter((order) => [order.id, order.service, order.phone, order.code, order.status].join(" ").toLowerCase().includes(search.toLowerCase()));
   const totalSpent = otpOrders.reduce((total, order) => total + order.price, 0);
   const successOrders = otpOrders.filter((order) => order.status === "Đã nhận OTP").length;
+
+  const rentNumber = () => {
+    const nextOrder: OtpOrder = {
+      id: `OTP-${1000 + otpOrders.length + 1}`,
+      service,
+      phone: `09${Math.floor(10000000 + Math.random() * 89999999)}`,
+      price: service === "Telegram" ? 2500 : service === "Facebook" ? 2200 : service === "YouTube" ? 1800 : 1500,
+      code: "Đang chờ",
+      timeLeft: "05:00",
+      status: "Đang chờ",
+    };
+
+    setOtpOrders((current) => [nextOrder, ...current]);
+    setMessage(`Đã thuê số ${nextOrder.phone} cho ${service}${carrier !== "Tất cả nhà mạng" ? ` (${carrier})` : ""}.`);
+  };
+
+  const refreshOrder = (id: string) => {
+    setOtpOrders((current) => current.map((order) => order.id === id && order.status === "Đang chờ" ? { ...order, code: String(Math.floor(100000 + Math.random() * 899999)), status: "Đã nhận OTP", timeLeft: "03:12" } : order));
+    setMessage(`Đã cập nhật trạng thái ${id}.`);
+  };
+
+  const copyText = async (value: string) => {
+    await navigator.clipboard.writeText(value);
+    setMessage("Đã copy vào clipboard.");
+  };
 
   return (
     <div className="space-y-6">
@@ -99,7 +133,7 @@ export default function ViOtpPage() {
           <div className="mt-5 space-y-4">
             <div>
               <label className="text-sm font-semibold text-slate-600">Dịch vụ</label>
-              <select className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100">
+              <select value={service} onChange={(event) => setService(event.target.value)} className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100">
                 {services.map((service) => (
                   <option key={service}>{service}</option>
                 ))}
@@ -108,7 +142,7 @@ export default function ViOtpPage() {
 
             <div>
               <label className="text-sm font-semibold text-slate-600">Nhà mạng</label>
-              <select className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100">
+              <select value={carrier} onChange={(event) => setCarrier(event.target.value)} className="mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100">
                 <option>Tất cả nhà mạng</option>
                 <option>Viettel</option>
                 <option>Mobifone</option>
@@ -120,7 +154,9 @@ export default function ViOtpPage() {
               Giá dự kiến từ <strong>1.500đ</strong> đến <strong>2.500đ</strong> cho mỗi số.
             </div>
 
-            <button className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-semibold text-white transition hover:bg-cyan-700">
+            {message && <div className="rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">{message}</div>}
+
+            <button onClick={rentNumber} className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-semibold text-white transition hover:bg-cyan-700">
               Thuê số ngay
             </button>
           </div>
@@ -136,6 +172,8 @@ export default function ViOtpPage() {
             <div className="relative w-full lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="Tìm số, dịch vụ hoặc mã OTP..."
                 className="w-full rounded-xl border bg-slate-50 py-3 pl-10 pr-4 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100"
               />
@@ -157,7 +195,7 @@ export default function ViOtpPage() {
                 </tr>
               </thead>
               <tbody>
-                {otpOrders.map((order) => {
+                {filteredOrders.map((order) => {
                   const statusClass =
                     order.status === "Đã nhận OTP"
                       ? "bg-emerald-100 text-emerald-700"
@@ -180,10 +218,10 @@ export default function ViOtpPage() {
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex gap-2">
-                          <button className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
+                          <button onClick={() => copyText(`${order.phone} | OTP: ${order.code}`)} className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
                             <Copy size={17} />
                           </button>
-                          <button className="rounded-lg p-2 text-slate-600 transition hover:bg-cyan-50 hover:text-cyan-600">
+                          <button onClick={() => refreshOrder(order.id)} className="rounded-lg p-2 text-slate-600 transition hover:bg-cyan-50 hover:text-cyan-600">
                             <RefreshCw size={17} />
                           </button>
                         </div>

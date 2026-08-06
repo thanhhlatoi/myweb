@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 import {
   ColumnDef,
   flexRender,
@@ -19,6 +20,8 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  "use no memo";
+
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
